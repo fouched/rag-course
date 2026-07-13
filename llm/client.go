@@ -68,7 +68,7 @@ func (c *Client) ChatStream(ctx context.Context, messages []Message, onDelta fun
 }
 
 func toSDKMessages(messages []Message) []openai.ChatCompletionMessageParamUnion {
-	out := make([]openai.ChatCompletionMessageParamUnion, len(messages))
+	out := make([]openai.ChatCompletionMessageParamUnion, 0, len(messages))
 
 	for _, m := range messages {
 		switch m.Role {
