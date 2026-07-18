@@ -1,3 +1,8 @@
+// Package chat hosts the interactive terminal session. The REPL holds
+// a persistent message history (system prompt + user/assistant turns)
+// and replays it on every model call, because the chat-completions
+// API is stateless — the server has no memory between requests.
+
 package chat
 
 import (
@@ -13,6 +18,7 @@ import (
 	"time"
 )
 
+// Options configures a single REPL session.
 type Options struct {
 	SystemPromptFile string
 }
@@ -69,6 +75,10 @@ func RunREPL(ctx context.Context, client *llm.Client, opts Options) error {
 	}
 }
 
+// spinner renders a single-line animation on stdout until Stop is
+// called. It clears the line on stop so subsequent output starts at
+// column zero. Stop is safe to call multiple times and from multiple
+// goroutines; only the first call has any effect.
 type spinner struct {
 	stop chan struct{}
 	done chan struct{}
@@ -103,6 +113,9 @@ func (s *spinner) Stop() {
 	<-s.done
 }
 
+// seedHistory builds the initial conversation slice. When a system
+// prompt file is configured and present, its contents become the
+// first message; otherwise the slice starts empty.
 func seedHistory(path string) ([]llm.Message, error) {
 	if path == "" {
 		return nil, nil
