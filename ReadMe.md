@@ -3,11 +3,11 @@
 Install as per instructions on: https://ollama.com/
 
 Tested running models locally with:
-- gemma3
-- llama3.1
+- gemma3 - <code>ollama pull gemma3</code>
+- llama3.1 - <code>ollama pull llama3.1</code>
 
 For embedding:
-- nomic-embed-text
+- nomic-embed-text - <code>ollama pull nomic-embed-text</code>
 
 
 ## Docker
