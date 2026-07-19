@@ -1,4 +1,4 @@
-// Package chunk - ingest takes documents
+// Package ingest - takes documents
 // from a source directory, chunks them, embeds the chunks, upserts the
 // result into a vector.Store, and then moves the originals into a
 // "processed" directory. It exposes a long-running Watch entry point
@@ -26,7 +26,7 @@
 // embedded with the SAME model and the store returns the chunks whose
 // embeddings sit closest to it. Steps 3 and 5 here are what make that
 // lookup possible.
-package chunk
+package ingest
 
 import (
 	"context"
