@@ -18,7 +18,7 @@ import (
 
 const debounceDelay = 500 * time.Millisecond
 
-func watch(ctx context.Context, opts Options, embedder llm.Embedder, store vector.Store, logger *log.Logger) error {
+func Watch(ctx context.Context, opts Options, embedder llm.Embedder, store vector.Store, logger *log.Logger) error {
 	if filepath.Clean(opts.SourceDir) == filepath.Clean(opts.ProcessedDir) {
 		return errors.New("source and processed directories must differ")
 	}
