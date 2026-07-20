@@ -1,5 +1,6 @@
 # rag-course
-## Ollama
+## Set up
+### Ollama
 Install as per instructions on: https://ollama.com/
 
 Tested running models <b>locally</b> with:
@@ -10,7 +11,7 @@ For embedding:
 - nomic-embed-text - <code>ollama pull nomic-embed-text</code>
 
 
-## Docker
+### Docker
 Create containers:
 
 <code>docker compose up</code>
@@ -25,5 +26,5 @@ Or
 
 <code>docker compose up</code>
 
-## Configuration
+### Configuration
 See <code>.env</code> 
