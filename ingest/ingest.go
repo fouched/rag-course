@@ -78,7 +78,7 @@ type Options struct {
 // chunk → embed → upsert work.
 func processOne(ctx context.Context, path string, opts Options, embedder llm.Embedder, store vector.Store) error {
 	if !supportedFormat(path) {
-		return fmt.Errorf("not supported format: %s", filepath.Ext(path))
+		return fmt.Errorf("unsupported format: %s", filepath.Ext(path))
 	}
 
 	raw, err := os.ReadFile(path)

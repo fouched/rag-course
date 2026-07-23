@@ -23,10 +23,10 @@ func Watch(ctx context.Context, opts Options, embedder llm.Embedder, store vecto
 		return errors.New("source and processed directories must differ")
 	}
 	if err := os.MkdirAll(opts.SourceDir, 0o755); err != nil {
-		return fmt.Errorf("could not create source directory: %w", err)
+		return fmt.Errorf("could not create source dir: %w", err)
 	}
 	if err := os.MkdirAll(opts.ProcessedDir, 0o755); err != nil {
-		return fmt.Errorf("could not create processed directory: %w", err)
+		return fmt.Errorf("could not create processed dir: %w", err)
 	}
 
 	w, err := fsnotify.NewWatcher()
@@ -36,21 +36,23 @@ func Watch(ctx context.Context, opts Options, embedder llm.Embedder, store vecto
 	defer w.Close()
 
 	if err := w.Add(opts.SourceDir); err != nil {
-		return fmt.Errorf("could not add source directory to watcher: %w", err)
+		return fmt.Errorf("could not add watch source dir: %w", err)
 	}
 
 	processedAbs, err := filepath.Abs(opts.ProcessedDir)
 	if err != nil {
-		return fmt.Errorf("could not resolve processed directory: %w", err)
+		return fmt.Errorf("could not resolve processed dir: %w", err)
 	}
 
 	handle := func(path string) {
 		if err := processOne(ctx, path, opts, embedder, store); err != nil {
 			logger.Printf("could not process %s: %v", filepath.Base(path), err)
+			return
 		}
 		dst := filepath.Join(opts.ProcessedDir, filepath.Base(path))
 		if err := os.Rename(path, dst); err != nil {
 			logger.Printf("could not move %s to processed: %v", filepath.Base(path), err)
+			return
 		}
 		logger.Printf("ingested %s", filepath.Base(path))
 	}
@@ -59,7 +61,6 @@ func Watch(ctx context.Context, opts Options, embedder llm.Embedder, store vecto
 	if err != nil {
 		return fmt.Errorf("could not read source dir: %w", err)
 	}
-
 	for _, e := range entries {
 		if e.IsDir() || strings.HasPrefix(e.Name(), ".") {
 			continue
@@ -68,22 +69,22 @@ func Watch(ctx context.Context, opts Options, embedder llm.Embedder, store vecto
 	}
 
 	var (
-		timerMu sync.Mutex
-		timers  = make(map[string]*time.Timer)
+		timersMu sync.Mutex
+		timers   = make(map[string]*time.Timer)
 	)
 
 	schedule := func(path string) {
-		timerMu.Lock()
-		defer timerMu.Unlock()
+		timersMu.Lock()
+		defer timersMu.Unlock()
 		if t, ok := timers[path]; ok {
 			t.Reset(debounceDelay)
 			return
 		}
 
 		timers[path] = time.AfterFunc(debounceDelay, func() {
-			timerMu.Lock()
+			timersMu.Lock()
 			delete(timers, path)
-			timerMu.Unlock()
+			timersMu.Unlock()
 			handle(path)
 		})
 	}
@@ -107,7 +108,7 @@ func Watch(ctx context.Context, opts Options, embedder llm.Embedder, store vecto
 			if !ok {
 				return nil
 			}
-			logger.Printf("watch error: %v", err)
+			logger.Printf("watcher error: %v", err)
 		}
 	}
 }
@@ -117,7 +118,7 @@ func shouldProcess(path, processedAbs string) bool {
 		return false
 	}
 	info, err := os.Stat(path)
-	if err != nil || !info.IsDir() {
+	if err != nil || info.IsDir() {
 		return false
 	}
 	abs, err := filepath.Abs(path)
