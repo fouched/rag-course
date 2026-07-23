@@ -313,8 +313,8 @@ func (s *Store) Query(ctx context.Context, embedding []float32, topK int) ([]vec
 		if err := rows.Scan(&r.Document.ID, &r.Document.Content, &metaRaw, &distance); err != nil {
 			return nil, err
 		}
-		if err := unmarshalMetadata(metaRaw, &r.Document.Metadata); err != nil {
-			return nil, fmt.Errorf("pgvector: metadata for %s: %w", r.Document.ID, err)
+		if err := unmarshalMetadata(metaRaw, &r.Metadata); err != nil {
+			return nil, fmt.Errorf("pgvector: metadata for %s: %w", r.ID, err)
 		}
 		r.Score = float32(1 - distance)
 		results = append(results, r)

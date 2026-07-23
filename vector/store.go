@@ -54,7 +54,7 @@ type Document struct {
 
 // Result is one hit from a similarity query.
 type Result struct {
-	Document Document
+	Document // Embed Document to promote its fields and methods
 
 	// Score is the similarity between the query vector and the stored
 	// vector. Higher is more similar; the exact metric (cosine,
