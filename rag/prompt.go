@@ -8,7 +8,7 @@ import (
 
 const contextPreamble = `Use the following excerpt from the document collection to answer the question.
 Cite sources by filename when you draw from them. If the excerpts do not address the question, say so 
-before answer from general knowledge.`
+before answering from general knowledge.`
 
 const unknownSource = `(unknown source)`
 
@@ -26,7 +26,7 @@ func formatContext(hits []vector.Result) string {
 		if source == "" {
 			source = unknownSource
 		}
-		fmt.Fprintf(&sb, "[%d] Source: %s (similarity) %.2f)\n%s\n\n",
+		fmt.Fprintf(&sb, "[%d] Source: %s (similarity %.2f)\n%s\n\n",
 			i+1, source, h.Score, h.Content)
 	}
 
