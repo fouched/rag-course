@@ -38,7 +38,9 @@ This rag model almost exclusively uses the RAG and not the general knowledge
 of the LLM. This is on purpose, just to show how it works.
 
 Basic LLM/RAG manipulation can be done by editing:
+
 <code>prompts/system-custom.md</code>
+
 <code>rag/prompt.go</code>
 
 Have fun exploring!
