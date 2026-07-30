@@ -91,8 +91,52 @@ func (s *Server) Routes() http.Handler {
 		fs := http.FileServer(http.Dir(s.imagesDir))
 		r.Handle("/images/*", http.StripPrefix("/images", fs))
 	}
+	if s.client.HasVision() {
+		r.Post("/api/caption", s.handleCaption)
+	}
 
 	return r
+}
+
+type captionResponse struct {
+	Description string `json:"description"`
+}
+
+func (s *Server) handleCaption(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxUploadBytes)
+	if err := r.ParseMultipartForm(maxUploadBytes); err != nil {
+		http.Error(w, "upload too large or malformed: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	file, header, err := r.FormFile("image")
+	if err != nil {
+		http.Error(w, "missing image field", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	if !ingest.IsImage(filepath.Base(header.Filename)) {
+		http.Error(w, "unsupported image format", http.StatusUnsupportedMediaType)
+		return
+	}
+
+	content, err := io.ReadAll(file)
+	if err != nil {
+		http.Error(w, "read upload: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	mime := header.Header.Get("Content-Type")
+
+	desc, err := s.client.DescribeImage(r.Context(), mime, content)
+	if err != nil {
+		log.Printf("[web] caption failed for %q: %v", header.Filename, err)
+		http.Error(w, "caption failed", http.StatusBadGateway)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(captionResponse{Description: strings.TrimSpace(desc)})
 }
 
 type uploadImageResponse struct {
@@ -199,8 +243,8 @@ func safeFileName(name string) string {
 func (s *Server) handleChatPage(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	if err := s.tpl.ExecuteTemplate(w, "chat.gohtml", map[string]any{
-		"Title": s.title,
-		//"CaptionEnabled": s.client.HasVision(),
+		"Title":          s.title,
+		"CaptionEnabled": s.client.HasVision(),
 	}); err != nil {
 		log.Printf("[web] error executing template: %v", err)
 	}

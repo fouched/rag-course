@@ -43,4 +43,6 @@ Basic LLM/RAG manipulation can be done by editing:
 
 <code>rag/prompt.go</code>
 
+<code>llm/vision.go</code>
+
 Have fun exploring!
