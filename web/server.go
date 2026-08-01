@@ -84,13 +84,20 @@ func (s *Server) Routes() http.Handler {
 	r.Use(middleware.Recoverer)
 
 	r.Get("/chat", s.handleChatPage)
-	r.Post("/api/chat/stream", s.handleChatStream)
-	r.Post("/api/upload", s.handleUpload)
-	if s.imagesDir != "" {
-		r.Post("/api/upload/image", s.handleUploadImage)
-		fs := http.FileServer(http.Dir(s.imagesDir))
-		r.Handle("/images/*", http.StripPrefix("/images", fs))
-	}
+
+	r.Group(func(r chi.Router) {
+		r.Use(InjectionDefence)
+
+		r.Post("/api/chat/stream", s.handleChatStream)
+		r.Post("/api/upload", s.handleUpload)
+		if s.imagesDir != "" {
+			r.Post("/api/upload/image", s.handleUploadImage)
+		}
+	})
+
+	fs := http.FileServer(http.Dir(s.imagesDir))
+	r.Handle("/images/*", http.StripPrefix("/images", fs))
+
 	if s.client.HasVision() {
 		r.Post("/api/caption", s.handleCaption)
 	}
