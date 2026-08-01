@@ -12,8 +12,10 @@ import (
 	"regexp"
 )
 
-const injectScanBudget = 64 * 1024
+const injectionScanBudget = 64 * 1024
+
 const maxJSONBodyBytes = 1 << 20
+
 const maxMultipartBytes = 10 << 20
 
 var injectionPatterns = []*regexp.Regexp{
@@ -41,8 +43,8 @@ var injectionPatterns = []*regexp.Regexp{
 }
 
 func scanForInjection(s string) string {
-	if len(s) > injectScanBudget {
-		s = s[:injectScanBudget]
+	if len(s) > injectionScanBudget {
+		s = s[:injectionScanBudget]
 	}
 
 	for _, p := range injectionPatterns {
@@ -54,7 +56,7 @@ func scanForInjection(s string) string {
 	return ""
 }
 
-func InjectionDefence(next http.Handler) http.Handler {
+func InjectionDefense(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		mt, _, _ := mime.ParseMediaType(r.Header.Get("Content-Type"))
 		switch mt {
@@ -71,12 +73,12 @@ func InjectionDefence(next http.Handler) http.Handler {
 func inspectJSON(w http.ResponseWriter, r *http.Request, next http.Handler) {
 	body, err := io.ReadAll(http.MaxBytesReader(w, r.Body, maxJSONBodyBytes))
 	if err != nil {
-		http.Error(w, "read body:"+err.Error(), http.StatusBadRequest)
+		http.Error(w, "read body: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	var req chatRequest
-	if jsonErr := json.Unmarshal(body, &req); jsonErr != nil {
+	if jsonErr := json.Unmarshal(body, &req); jsonErr == nil {
 		for _, m := range req.Messages {
 			if m.Role != "user" {
 				continue
@@ -132,7 +134,6 @@ func inspectMultiPart(w http.ResponseWriter, r *http.Request, next http.Handler)
 	}
 
 	next.ServeHTTP(w, r)
-
 }
 
 func scanFilePart(fh *multipart.FileHeader) (string, error) {
@@ -141,7 +142,7 @@ func scanFilePart(fh *multipart.FileHeader) (string, error) {
 		return "", err
 	}
 	defer f.Close()
-	buf, err := io.ReadAll(io.LimitReader(f, injectScanBudget+1))
+	buf, err := io.ReadAll(io.LimitReader(f, injectionScanBudget+1))
 	if err != nil {
 		return "", err
 	}

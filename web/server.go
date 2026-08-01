@@ -86,7 +86,7 @@ func (s *Server) Routes() http.Handler {
 	r.Get("/chat", s.handleChatPage)
 
 	r.Group(func(r chi.Router) {
-		r.Use(InjectionDefence)
+		r.Use(InjectionDefense)
 
 		r.Post("/api/chat/stream", s.handleChatStream)
 		r.Post("/api/upload", s.handleUpload)
